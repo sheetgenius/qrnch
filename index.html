@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QR Code Generator — qrnch</title>
+  <meta name="description" content="Free QR code generator. Create QR codes for URLs, WiFi passwords, contact cards, and emails. 100% browser-side — nothing is uploaded. Download as PNG instantly.">
+  <meta name="keywords" content="qr code generator, free qr code, qr code url, qr code wifi password, qr code generator download, qr code no sign up, qr code generator free">
+  <meta property="og:title" content="qrnch — Free QR Code Generator">
+  <meta property="og:description" content="Create QR codes for URLs, WiFi, contacts, and emails. Free, instant, 100% browser-side.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://qrnch.radicchio.page">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="qrnch — Free QR Code Generator">
+  <meta name="twitter:description" content="Generate QR codes for URLs, WiFi, contacts, and emails. Browser-side, free, no sign-up.">
+  <link rel="canonical" href="https://qrnch.radicchio.page">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "name": "qrnch — QR Code Generator",
+        "applicationCategory": "UtilitiesApplication",
+        "description": "Free browser-side QR code generator for URLs, WiFi passwords, contact cards, and emails. Nothing is uploaded to any server.",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "operatingSystem": "Any",
+        "url": "https://qrnch.radicchio.page"
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Is this QR code generator free?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Yes, completely free with no sign-up required. Generate and download QR codes for any content at no cost." }
+          },
+          {
+            "@type": "Question",
+            "name": "Is my data uploaded to a server?",
+            "acceptedAnswer": { "@type": "Answer", "text": "No. qrnch runs entirely in your browser. Your URLs, WiFi passwords, and contact information never leave your device." }
+          },
+          {
+            "@type": "Question",
+            "name": "What types of QR codes can I generate?",
+            "acceptedAnswer": { "@type": "Answer", "text": "qrnch supports URL/text QR codes, WiFi network codes (WPA/WPA2, WEP, or open), contact cards (vCard 3.0), and email QR codes with pre-filled address, subject, and body." }
+          },
+          {
+            "@type": "Question",
+            "name": "What formats can I download?",
+            "acceptedAnswer": { "@type": "Answer", "text": "PNG at your chosen size (128, 256, or 512 pixels). PNG is the most compatible format for print, web, and apps. Use 512px for best print quality." }
+          },
+          {
+            "@type": "Question",
+            "name": "What size QR code should I use for print?",
+            "acceptedAnswer": { "@type": "Answer", "text": "For print materials, download at 512px and ensure your print dimensions are at least 1x1 inch at 300 DPI. Simpler content (shorter URLs) produces smaller, more scannable codes at small sizes." }
+          },
+          {
+            "@type": "Question",
+            "name": "Will a WiFi QR code work on iPhone and Android?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Yes. iOS 11+ and Android 10+ can scan WiFi QR codes directly from the native camera app. Select WPA/WPA2 for most modern networks." }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0f0e0c;
+      --surface: #1a1814;
+      --border: #2a2622;
+      --text: #e0d8c8;
+      --muted: #8f8577;
+      --accent: #c8a84e;
+      --accent-dim: #8a7235;
+      --radius: 4px;
+      --font: 'Courier New', Courier, monospace;
+    }
+    body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; line-height: 1.6; min-height: 100vh; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    header { border-bottom: 1px solid var(--border); padding: 20px 24px; display: flex; align-items: baseline; gap: 16px; }
+    .logo { font-size: 20px; font-weight: bold; color: var(--accent); letter-spacing: -0.5px; }
+    .tagline { color: var(--muted); font-size: 12px; }
+
+    .container { max-width: 900px; margin: 0 auto; padding: 32px 24px; }
+    h1 { font-size: 18px; margin-bottom: 8px; }
+    .intro { color: var(--muted); font-size: 13px; margin-bottom: 28px; }
+
+    .tool-grid { display: grid; grid-template-columns: 1fr 280px; gap: 24px; align-items: start; }
+    @media (max-width: 660px) { .tool-grid { grid-template-columns: 1fr; } }
+
+    .modes { display: flex; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 20px; }
+    .mode-btn { flex: 1; background: var(--surface); border: none; border-right: 1px solid var(--border); color: var(--muted); font-family: var(--font); font-size: 12px; padding: 8px 4px; cursor: pointer; text-align: center; transition: background 0.1s, color 0.1s; }
+    .mode-btn:last-child { border-right: none; }
+    .mode-btn.active { background: var(--bg); color: var(--accent); }
+    .mode-btn:hover:not(.active) { background: var(--bg); color: var(--text); }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .field { margin-bottom: 14px; }
+    label { display: block; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    input, textarea, select { width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-family: var(--font); font-size: 13px; padding: 8px 10px; outline: none; transition: border-color 0.15s; }
+    input:focus, textarea:focus, select:focus { border-color: var(--accent-dim); }
+    textarea { resize: vertical; min-height: 80px; }
+    select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238f8577' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; }
+
+    label.inline-check { display: flex; align-items: center; gap: 8px; text-transform: none; letter-spacing: 0; font-size: 12px; cursor: pointer; }
+    label.inline-check input[type="checkbox"] { width: auto; }
+
+    .qr-panel { display: flex; flex-direction: column; align-items: center; gap: 16px; }
+    .qr-box { background: #fff; border-radius: var(--radius); padding: 16px; display: flex; align-items: center; justify-content: center; min-height: 248px; min-width: 248px; width: 248px; }
+    #qrcode canvas, #qrcode img { display: block; }
+    .qr-empty { color: #aaa; font-family: var(--font); font-size: 12px; text-align: center; padding: 20px; }
+
+    .qr-options { width: 100%; }
+
+    .btn-row { display: flex; gap: 8px; width: 100%; }
+    .btn { flex: 1; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-family: var(--font); font-size: 12px; padding: 8px 12px; cursor: pointer; transition: border-color 0.15s, color 0.15s; }
+    .btn:hover:not(:disabled) { border-color: var(--accent-dim); color: var(--accent); }
+    .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--bg); font-weight: bold; }
+    .btn.primary:hover:not(:disabled) { background: #d4b45a; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .privacy-note { font-size: 11px; color: var(--muted); text-align: center; }
+
+    .description { margin-top: 48px; padding-top: 32px; border-top: 1px solid var(--border); }
+    .description h2 { font-size: 14px; color: var(--accent); margin-bottom: 12px; }
+    .description p { color: var(--muted); font-size: 13px; margin-bottom: 12px; line-height: 1.7; }
+    .description strong { color: var(--text); }
+
+    .faq { margin-top: 32px; }
+    .faq h2 { font-size: 14px; color: var(--accent); margin-bottom: 16px; }
+    .faq-item { border-bottom: 1px solid var(--border); padding: 14px 0; }
+    .faq-item:last-child { border-bottom: none; }
+    .faq-q { font-size: 13px; color: var(--text); margin-bottom: 6px; }
+    .faq-a { font-size: 12px; color: var(--muted); line-height: 1.6; }
+    .faq-a code { background: var(--surface); padding: 1px 4px; border-radius: 2px; }
+
+    .tool-cluster { margin-top: 32px; padding: 16px; border: 1px solid var(--border); border-radius: var(--radius); }
+    .tool-cluster-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+    .tool-links { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tool-link { font-size: 11px; border: 1px solid var(--border); border-radius: var(--radius); padding: 4px 10px; color: var(--muted); transition: border-color 0.15s, color 0.15s; }
+    .tool-link:hover { border-color: var(--accent-dim); color: var(--accent); text-decoration: none; }
+
+    footer { border-top: 1px solid var(--border); padding: 20px 24px; text-align: center; color: var(--muted); font-size: 11px; margin-top: 48px; }
+    footer a { color: var(--muted); }
+    footer a:hover { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">qrnch</div>
+    <div class="tagline">free qr code generator — browser-side, instant, private</div>
+  </header>
+
+  <div class="container">
+    <h1>QR Code Generator</h1>
+    <p class="intro">Generate QR codes for URLs, WiFi networks, contacts, and emails. Nothing is uploaded — all processing happens in your browser.</p>
+
+    <div class="tool-grid">
+      <!-- Left: Input -->
+      <div class="input-col">
+        <div class="modes" role="tablist">
+          <button class="mode-btn active" data-mode="url" role="tab" aria-selected="true">URL / Text</button>
+          <button class="mode-btn" data-mode="wifi" role="tab" aria-selected="false">WiFi</button>
+          <button class="mode-btn" data-mode="contact" role="tab" aria-selected="false">Contact</button>
+          <button class="mode-btn" data-mode="email" role="tab" aria-selected="false">Email</button>
+        </div>
+
+        <!-- URL / Text -->
+        <div class="panel active" id="panel-url">
+          <div class="field">
+            <label for="url-input">URL or text</label>
+            <textarea id="url-input" placeholder="https://example.com or any text..." rows="4"></textarea>
+          </div>
+        </div>
+
+        <!-- WiFi -->
+        <div class="panel" id="panel-wifi">
+          <div class="field">
+            <label for="wifi-ssid">Network name (SSID)</label>
+            <input type="text" id="wifi-ssid" placeholder="My Network">
+          </div>
+          <div class="field">
+            <label for="wifi-pass">Password</label>
+            <input type="text" id="wifi-pass" placeholder="Leave blank for open networks" autocomplete="off">
+          </div>
+          <div class="field">
+            <label for="wifi-sec">Security type</label>
+            <select id="wifi-sec">
+              <option value="WPA">WPA / WPA2 / WPA3</option>
+              <option value="WEP">WEP (legacy)</option>
+              <option value="">None (open network)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="inline-check">
+              <input type="checkbox" id="wifi-hidden">
+              Hidden network (doesn't broadcast SSID)
+            </label>
+          </div>
+        </div>
+
+        <!-- Contact / vCard -->
+        <div class="panel" id="panel-contact">
+          <div class="field">
+            <label for="contact-name">Full name</label>
+            <input type="text" id="contact-name" placeholder="Jane Smith">
+          </div>
+          <div class="field">
+            <label for="contact-phone">Phone</label>
+            <input type="tel" id="contact-phone" placeholder="+1 555 000 0000">
+          </div>
+          <div class="field">
+            <label for="contact-email">Email</label>
+            <input type="email" id="contact-email" placeholder="jane@example.com">
+          </div>
+          <div class="field">
+            <label for="contact-org">Organization (optional)</label>
+            <input type="text" id="contact-org" placeholder="Acme Corp">
+          </div>
+          <div class="field">
+            <label for="contact-url">Website (optional)</label>
+            <input type="url" id="contact-url" placeholder="https://example.com">
+          </div>
+        </div>
+
+        <!-- Email -->
+        <div class="panel" id="panel-email">
+          <div class="field">
+            <label for="email-to">To address</label>
+            <input type="email" id="email-to" placeholder="recipient@example.com">
+          </div>
+          <div class="field">
+            <label for="email-subject">Subject (optional)</label>
+            <input type="text" id="email-subject" placeholder="Subject line">
+          </div>
+          <div class="field">
+            <label for="email-body">Body (optional)</label>
+            <textarea id="email-body" placeholder="Message body..." rows="3"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: QR Output -->
+      <div class="qr-panel">
+        <div class="qr-box">
+          <div id="qrcode">
+            <div class="qr-empty">Enter content<br>to generate QR</div>
+          </div>
+        </div>
+
+        <div class="qr-options">
+          <div class="field">
+            <label for="qr-size">Download size</label>
+            <select id="qr-size">
+              <option value="128">Small (128 × 128 px)</option>
+              <option value="256" selected>Medium (256 × 256 px)</option>
+              <option value="512">Large (512 × 512 px)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="btn-row">
+          <button class="btn primary" id="btn-download" disabled>&#8595; Download PNG</button>
+          <button class="btn" id="btn-copy" disabled>Copy</button>
+        </div>
+        <div class="privacy-note">100% browser-side — nothing uploaded</div>
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div class="description">
+      <h2>About qrnch</h2>
+      <p>
+        qrnch is a free, browser-side QR code generator. Every QR code is created locally in your browser using JavaScript — your URLs, WiFi credentials, contact information, and email content never leave your device. No server, no account, no tracking.
+      </p>
+      <p>
+        QR codes are everywhere in 2026: restaurant menus, business cards, product packaging, conference badges, office WiFi signs, and print advertising. They bridge physical materials to digital destinations with a single camera scan. qrnch makes generating them fast, private, and completely free.
+      </p>
+      <p>
+        Four modes are supported. <strong>URL / Text</strong> encodes any URL or plain text — the most common use case. <strong>WiFi</strong> generates a code that, when scanned, prompts iOS or Android to join a network automatically — no typing required, ideal for offices, cafes, and events. <strong>Contact</strong> creates a vCard 3.0 QR code that saves a contact directly to the phone's address book when scanned. <strong>Email</strong> generates a pre-filled mailto link with optional subject and body.
+      </p>
+      <p>
+        Download your QR code as a PNG at 128, 256, or 512 pixels. For print materials, use 512px and ensure your print dimensions are at least 1×1 inch at 300 DPI. High error correction (level H) is used by default, so QR codes remain scannable even when partially obscured, printed at small sizes, or placed on textured backgrounds.
+      </p>
+    </div>
+
+    <!-- FAQ -->
+    <div class="faq">
+      <h2>Frequently asked questions</h2>
+
+      <div class="faq-item">
+        <div class="faq-q">Is this QR code generator free?</div>
+        <div class="faq-a">Yes — completely free, no sign-up, no account, no email. Generate and download as many QR codes as you need.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">Does my data get uploaded to a server?</div>
+        <div class="faq-a">No. qrnch runs entirely in your browser. Your URLs, WiFi passwords, and contact details are never transmitted anywhere. You can use it offline once the page has loaded.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">What QR code types are supported?</div>
+        <div class="faq-a">URL/Text (any URL or plain text), WiFi (WPA/WPA2/WPA3/WEP/open networks — scan to join automatically on iOS 11+ and Android 10+), Contact (vCard 3.0 format — scan to save directly to address book), and Email (pre-filled mailto with optional subject and body).</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">What formats can I download?</div>
+        <div class="faq-a">PNG at your chosen size (128, 256, or 512 pixels). PNG is the most widely supported format for print, web, presentations, and apps. Use 512px for the sharpest results in print.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">How large should my QR code be for print?</div>
+        <div class="faq-a">At minimum, 1×1 inch (2.5×2.5 cm) at 300 DPI for reliable scanning from a normal distance. For business cards or small stickers, keep the QR content short — shorter URLs and simpler data produce fewer modules and scan more reliably at small sizes.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">Will a WiFi QR code work on iPhone and Android?</div>
+        <div class="faq-a">Yes. The native Camera app on iOS 11+ and Android 10+ can scan WiFi QR codes and offer to join the network automatically. Select WPA/WPA2/WPA3 for most modern routers. For open (password-free) networks, select "None."</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">How do I add the QR code to a website or document?</div>
+        <div class="faq-a">Download the PNG, then insert it like any image. In HTML: <code>&lt;img src="qrnch.png" alt="QR code"&gt;</code>. In Word or Google Docs: Insert → Image. In Canva or Figma: drag and drop the PNG directly onto your canvas.</div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">Can I use these QR codes commercially?</div>
+        <div class="faq-a">Yes. QR codes generated by qrnch are yours to use for any purpose — personal, commercial, print, or digital — with no attribution required.</div>
+      </div>
+    </div>
+
+    <!-- Tool cluster cross-links -->
+    <div class="tool-cluster">
+      <div class="tool-cluster-label">More free tools</div>
+      <div class="tool-links">
+        <a href="https://envlint.com" class="tool-link">.env linter</a>
+        <a href="https://cronfig.radicchio.page" class="tool-link">cron tester</a>
+        <a href="https://linkscrub.radicchio.page" class="tool-link">url cleaner</a>
+        <a href="https://feedlint.radicchio.page" class="tool-link">rss validator</a>
+        <a href="https://difflint.radicchio.page" class="tool-link">diff linter</a>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div>qrnch &mdash; Free QR Code Generator &nbsp;&middot;&nbsp; <a href="https://bitterdesk.com">Support</a> &nbsp;&middot;&nbsp; &copy; 2026 Bitter</div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha512-CNgIRecGo7nphbeZ04Sc13ka07paqdeTu0WR1IM4kNcpmBAUSHSt7Jd/D7SBmWoHj+W0v5rSKFYKGCMUNxgZQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>
+    let currentMode = 'url';
+    let qrInstance = null;
+    let hasQR = false;
+
+    // Mode switching
+    document.querySelectorAll('.mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.mode-btn').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected', 'false'); });
+        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+        currentMode = btn.dataset.mode;
+        document.getElementById('panel-' + currentMode).classList.add('active');
+        updateQR();
+      });
+    });
+
+    function escapeWifi(s) { return s.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/"/g, '\\"'); }
+
+    function getQRContent() {
+      if (currentMode === 'url') {
+        return document.getElementById('url-input').value.trim();
+      }
+      if (currentMode === 'wifi') {
+        const ssid = document.getElementById('wifi-ssid').value.trim();
+        if (!ssid) return '';
+        const pass = document.getElementById('wifi-pass').value;
+        const sec = document.getElementById('wifi-sec').value;
+        const hidden = document.getElementById('wifi-hidden').checked ? 'true' : 'false';
+        return 'WIFI:T:' + sec + ';S:' + escapeWifi(ssid) + ';P:' + escapeWifi(pass) + ';H:' + hidden + ';;';
+      }
+      if (currentMode === 'contact') {
+        const name = document.getElementById('contact-name').value.trim();
+        if (!name) return '';
+        const phone = document.getElementById('contact-phone').value.trim();
+        const email = document.getElementById('contact-email').value.trim();
+        const org = document.getElementById('contact-org').value.trim();
+        const url = document.getElementById('contact-url').value.trim();
+        const parts = name.split(' ');
+        const first = parts[0] || '';
+        const last = parts.slice(1).join(' ') || '';
+        let v = 'BEGIN:VCARD\nVERSION:3.0\n';
+        v += 'FN:' + name + '\n';
+        v += 'N:' + last + ';' + first + ';;;\n';
+        if (phone) v += 'TEL:' + phone + '\n';
+        if (email) v += 'EMAIL:' + email + '\n';
+        if (org) v += 'ORG:' + org + '\n';
+        if (url) v += 'URL:' + url + '\n';
+        v += 'END:VCARD';
+        return v;
+      }
+      if (currentMode === 'email') {
+        const to = document.getElementById('email-to').value.trim();
+        if (!to) return '';
+        const subject = document.getElementById('email-subject').value.trim();
+        const body = document.getElementById('email-body').value.trim();
+        let mailto = 'mailto:' + to;
+        const params = [];
+        if (subject) params.push('subject=' + encodeURIComponent(subject));
+        if (body) params.push('body=' + encodeURIComponent(body));
+        if (params.length) mailto += '?' + params.join('&');
+        return mailto;
+      }
+      return '';
+    }
+
+    function updateQR() {
+      const content = getQRContent();
+      const qrEl = document.getElementById('qrcode');
+      const dlBtn = document.getElementById('btn-download');
+      const cpBtn = document.getElementById('btn-copy');
+
+      if (!content) {
+        qrEl.innerHTML = '<div class="qr-empty">Enter content<br>to generate QR</div>';
+        dlBtn.disabled = true;
+        cpBtn.disabled = true;
+        hasQR = false;
+        qrInstance = null;
+        return;
+      }
+
+      qrEl.innerHTML = '';
+      try {
+        qrInstance = new QRCode(qrEl, {
+          text: content,
+          width: 216,
+          height: 216,
+          colorDark: '#000000',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.H
+        });
+        hasQR = true;
+        dlBtn.disabled = false;
+        cpBtn.disabled = false;
+      } catch (e) {
+        qrEl.innerHTML = '<div class="qr-empty" style="color:#c05050">Content too long<br>or invalid</div>';
+        hasQR = false;
+        qrInstance = null;
+        dlBtn.disabled = true;
+        cpBtn.disabled = true;
+      }
+    }
+
+    function renderOffscreen(content, size, callback) {
+      const tmp = document.createElement('div');
+      tmp.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
+      document.body.appendChild(tmp);
+      try {
+        new QRCode(tmp, { text: content, width: size, height: size, colorDark: '#000000', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.H });
+        setTimeout(() => {
+          const canvas = tmp.querySelector('canvas');
+          if (canvas) callback(canvas);
+          document.body.removeChild(tmp);
+        }, 80);
+      } catch (e) {
+        document.body.removeChild(tmp);
+      }
+    }
+
+    document.getElementById('btn-download').addEventListener('click', () => {
+      if (!hasQR) return;
+      const content = getQRContent();
+      const size = parseInt(document.getElementById('qr-size').value);
+      renderOffscreen(content, size, canvas => {
+        const a = document.createElement('a');
+        a.download = 'qrnch-' + currentMode + '.png';
+        a.href = canvas.toDataURL('image/png');
+        a.click();
+      });
+    });
+
+    document.getElementById('btn-copy').addEventListener('click', () => {
+      if (!hasQR) return;
+      const canvas = document.getElementById('qrcode').querySelector('canvas');
+      if (!canvas) return;
+      try {
+        canvas.toBlob(async blob => {
+          try {
+            await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+            const btn = document.getElementById('btn-copy');
+            const orig = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(() => { btn.textContent = orig; }, 1500);
+          } catch (e) {
+            document.getElementById('btn-download').click();
+          }
+        });
+      } catch (e) {
+        document.getElementById('btn-download').click();
+      }
+    });
+
+    document.getElementById('qr-size').addEventListener('change', updateQR);
+
+    // Live listeners
+    document.getElementById('url-input').addEventListener('input', updateQR);
+    ['wifi-ssid','wifi-pass','wifi-sec','wifi-hidden'].forEach(id => {
+      const el = document.getElementById(id);
+      el.addEventListener('input', updateQR);
+      el.addEventListener('change', updateQR);
+    });
+    ['contact-name','contact-phone','contact-email','contact-org','contact-url'].forEach(id => {
+      document.getElementById(id).addEventListener('input', updateQR);
+    });
+    ['email-to','email-subject','email-body'].forEach(id => {
+      document.getElementById(id).addEventListener('input', updateQR);
+    });
+
+    updateQR();
+  </script>
+</body>
+</html>
