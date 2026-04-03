@@ -24,3 +24,20 @@
 
 ### Improved
 - Added Disco to the free tools cross-link list
+
+## 2026-03-13
+
+### Improved
+- Added SiliconBench and the puzzle-game tools to the related links section, and corrected the FreeTakuzu link target
+
+## 2026-03-11
+
+### Added
+- Google Analytics 4 tracking
+
+### Fixed
+- FAQ structured data now matches the visible question titles on the page
+- FAQ questions now render as proper headings so audits detect the section consistently
+
+### Improved
+- Expanded the related tools section with labeled pill links, including FreeTakuzu
